@@ -1,0 +1,6 @@
+@DeepFace_HostAddress = http://localhost:5230
+
+GET {{DeepFace_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

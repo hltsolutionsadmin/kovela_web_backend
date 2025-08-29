@@ -1,0 +1,64 @@
+# -------------------------
+# Visual Studio / .NET Core
+# -------------------------
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rtifacts/
+
+# Publish
+*.Publish.xml
+*.pubxml
+*.publishproj
+
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual envs
+env/
+venv/
+ENV/
+DeepFace/Scripts/env/
+*.egg-info/
+
+# -------------------------
+# Angular / Node
+# -------------------------
+node_modules/
+dist/
+coverage/
+*.log
+
+# -------------------------
+# Face DB (local only, not prod)
+# -------------------------
+face_db/
+
+# -------------------------
+# OS / IDE Specific
+# -------------------------
+*.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+*.cache
+*.vscode/
