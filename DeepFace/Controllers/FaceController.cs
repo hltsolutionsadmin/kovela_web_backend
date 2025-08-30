@@ -89,8 +89,8 @@ namespace DeepFace.Controllers
                 var pyReq = new CheckRequestPython
                 {
                     Base64Image = request.Base64Image,
-                    TopK = 5,                // only ask Python for top 5
-                    Threshold = 0.35,        // cosine similarity threshold; tune if needed
+                    TopK = 5,
+                    Threshold = 0.35,
                     IncludeThumbnails = true
                 };
 
@@ -109,14 +109,13 @@ namespace DeepFace.Controllers
                     py.Matches = py.Matches
                         .Where(m => m.Score >= minScore)
                         .OrderByDescending(m => m.Score)
-                        .Take(5) // make sure we never return more than 5
+                        .Take(5)
                         .ToList();
 
                     // Guarantee at least one match if type = existing
                     if (py.Type == "existing" && !py.Matches.Any())
                     {
-                        // Re-fetch top candidate (bestScore) from original response
-                        // by calling Python again with TopK=1, thumbnails=true
+                        // Re-fetch top candidate (bestScore) from Python
                         var pyReqTop1 = new CheckRequestPython
                         {
                             Base64Image = request.Base64Image,
@@ -133,18 +132,38 @@ namespace DeepFace.Controllers
                         }
                     }
 
-                    // Augment with FaceId from SQL
+                    // Augment with FaceId and fallback thumbnail from SQL
                     if (py.Matches.Any())
                     {
                         var extIds = py.Matches.Select(m => m.ExternalId).Distinct().ToList();
                         var map = _context.Faces
                             .Where(f => extIds.Contains(f.ExternalId))
-                            .ToDictionary(f => f.ExternalId, f => f.FaceId);
+                            .ToDictionary(f => f.ExternalId, f => new { f.FaceId, f.ThumbnailBase64 });
 
                         foreach (var m in py.Matches)
                         {
-                            if (map.TryGetValue(m.ExternalId, out var faceId))
-                                m.FaceId = faceId;
+                            if (map.TryGetValue(m.ExternalId, out var faceData))
+                            {
+                                m.FaceId = faceData.FaceId;
+                                // Fallback to database thumbnail if Python service returned empty
+                                if (string.IsNullOrEmpty(m.Thumbnail))
+                                {
+                                    m.Thumbnail = faceData.ThumbnailBase64;
+                                }
+                            }
+                        }
+
+                        // Ensure at least one thumbnail for type == "existing"
+                        if (py.Type == "existing" && py.Matches.All(m => string.IsNullOrEmpty(m.Thumbnail)))
+                        {
+                            // Log warning for debugging
+                            Console.WriteLine($"Warning: No thumbnails returned from Python for externalIds: {string.Join(", ", extIds)}");
+                            // Try to fetch from database for the top match
+                            var topMatch = py.Matches.OrderByDescending(m => m.Score).FirstOrDefault();
+                            if (topMatch != null && map.TryGetValue(topMatch.ExternalId, out var topFaceData))
+                            {
+                                topMatch.Thumbnail = topFaceData.ThumbnailBase64;
+                            }
                         }
                     }
                 }
@@ -224,14 +243,19 @@ namespace DeepFace.Controllers
                     Directory.Delete(dbPath, true);
                 }
 
-                // 3. Delete FAISS index file
+                // 3. Delete FAISS index file and thumbnails
                 string indexPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "face_index.faiss");
                 if (System.IO.File.Exists(indexPath))
                 {
                     System.IO.File.Delete(indexPath);
                 }
+                string thumbnailsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "thumbnails.json");
+                if (System.IO.File.Exists(thumbnailsPath))
+                {
+                    System.IO.File.Delete(thumbnailsPath);
+                }
 
-                return Ok(new { message = "All enrolled faces and FAISS index cleared successfully." });
+                return Ok(new { message = "All enrolled faces, FAISS index, and thumbnails cleared successfully." });
             }
             catch (Exception ex)
             {

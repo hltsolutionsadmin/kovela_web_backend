@@ -13,8 +13,9 @@ import faiss
 # -----------------------
 # Config (edit as needed)
 # -----------------------
-INDEX_PATH = os.environ.get("FAISS_INDEX_PATH", "./face_index.faiss") # faiss index file
-IDS_PATH = os.environ.get("FAISS_IDS_PATH", "./faiss_ids.npy")        # numpy array of external_ids
+INDEX_PATH = os.environ.get("FAISS_INDEX_PATH", "./face_index.faiss")  # faiss index file
+IDS_PATH = os.environ.get("FAISS_IDS_PATH", "./faiss_ids.npy")         # numpy array of external_ids
+THUMBNAILS_PATH = os.environ.get("THUMBNAILS_PATH", "./thumbnails.json")  # thumbnails JSON file
 MODEL_NAME = os.environ.get("MODEL_NAME", "ArcFace")
 DEFAULT_TOP_K = int(os.environ.get("TOP_K", "10"))
 DEFAULT_THRESHOLD = float(os.environ.get("THRESHOLD", "0.35"))
@@ -30,24 +31,31 @@ D = 512
 INDEX = None
 IDS: List[str] = []
 INDEX_LOCK = threading.Lock()
-THUMBNAILS = {}  # store thumbnails in memory instead of saving images
-
+THUMBNAILS = {}  # store thumbnails in memory and persist to disk
 
 def _load_index():
-    global INDEX, IDS
+    global INDEX, IDS, THUMBNAILS
     if os.path.exists(INDEX_PATH) and os.path.exists(IDS_PATH):
         INDEX = faiss.read_index(INDEX_PATH)
         IDS = np.load(IDS_PATH, allow_pickle=True).tolist()
         if INDEX.ntotal != len(IDS):
             raise RuntimeError("FAISS index and ids.npy are out of sync.")
+        # Load thumbnails
+        if os.path.exists(THUMBNAILS_PATH):
+            with open(THUMBNAILS_PATH, "r") as f:
+                THUMBNAILS = json.load(f)
+        else:
+            THUMBNAILS = {}
     else:
         INDEX = faiss.IndexFlatIP(D)
-
+        THUMBNAILS = {}
 
 def _save_index():
     faiss.write_index(INDEX, INDEX_PATH)
     np.save(IDS_PATH, np.array(IDS, dtype=object), allow_pickle=True)
-
+    # Save thumbnails
+    with open(THUMBNAILS_PATH, "w") as f:
+        json.dump(THUMBNAILS, f)
 
 def _l2_normalize(vec: np.ndarray) -> np.ndarray:
     vec = vec.astype("float32")
@@ -56,12 +64,10 @@ def _l2_normalize(vec: np.ndarray) -> np.ndarray:
         return vec
     return vec / norm
 
-
 def _b64_to_image_bytes(b64: str) -> bytes:
     return base64.b64decode(b64)
 
-
-def _represent_image_bytes(img_bytes: bytes) -> Tuple[np.ndarray, str]:
+def VoidFunc:
     """Return (normalized 512-d embedding, thumbnail_b64)."""
     import tempfile
 
@@ -100,17 +106,14 @@ def _represent_image_bytes(img_bytes: bytes) -> Tuple[np.ndarray, str]:
         except Exception:
             pass
 
-
 def _search_top_k(query_emb: np.ndarray, top_k: int):
     q = query_emb.reshape(1, -1).astype("float32")
     scores, idx = INDEX.search(q, top_k)
     return scores, idx
 
-
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "model": MODEL_NAME, "count": INDEX.ntotal})
-
 
 @app.route("/embed", methods=["POST"])
 def embed():
@@ -124,7 +127,6 @@ def embed():
         return jsonify({"embedding": emb.tolist(), "thumbnail": thumb_b64})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/enroll", methods=["POST"])
 def enroll():
@@ -156,7 +158,6 @@ def enroll():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/check", methods=["POST"])
 def check():
@@ -198,6 +199,7 @@ def check():
             match = {"externalId": external_id, "score": float(sc)}
             if include_thumbs:
                 match["thumbnail"] = THUMBNAILS.get(external_id, "")
+                print(f"Thumbnail for {external_id}: {'found' if external_id in THUMBNAILS else 'not found'}")
             matches.append(match)
 
         resp_type = "existing" if best_score >= threshold else "new"
@@ -210,7 +212,6 @@ def check():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     _load_index()
