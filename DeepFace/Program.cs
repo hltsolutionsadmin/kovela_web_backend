@@ -24,17 +24,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    db.Database.Migrate();
-//}
-
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-//app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-//// other endpoints...
-//app.Run($"http://0.0.0.0:{port}");
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -49,4 +38,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Run($"http://0.0.0.0:{port}");
