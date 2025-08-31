@@ -17,5 +17,7 @@ namespace DeepFace.Models
         public string? ThumbnailBase64 { get; set; } // optional thumbnail (returned by Python)
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public bool Consent { get; set; }
     }
 }

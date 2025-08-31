@@ -7,5 +7,7 @@ namespace DeepFace.Models
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<FaceEntity> Faces { get; set; }
+
+        public DbSet<UserDetails> UserDetails { get; set; }
     }
 }

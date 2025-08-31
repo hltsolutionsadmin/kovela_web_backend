@@ -20,4 +20,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Scripts\Face_db\" />
+  </ItemGroup>
+
 </Project>
