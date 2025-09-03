@@ -36,8 +36,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Run($"http://0.0.0.0:{port}");
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//app.Run($"http://0.0.0.0:{port}");
 
 app.UseAuthorization();
 

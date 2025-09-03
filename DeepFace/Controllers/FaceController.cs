@@ -13,7 +13,7 @@ namespace DeepFace.Controllers
         private readonly ApplicationDbContext _context;
         private static readonly HttpClient _http = new HttpClient
         {
-            BaseAddress = new Uri("https://f502debc3739.ngrok-free.app/") // Flask server base URL
+            BaseAddress = new Uri("http://127.0.0.1:5001/") // Flask server base URL
         };
 
         private static readonly JsonSerializerOptions JsonOpts = new JsonSerializerOptions
@@ -67,7 +67,7 @@ namespace DeepFace.Controllers
                 if (!string.IsNullOrEmpty(py.Error))
                     return BadRequest(new { error = py.Error });
 
-                const double minScore = 0.3;
+                const double minScore = 0.5;
                 if (py.Matches != null)
                 {
                     py.Matches = py.Matches
@@ -123,12 +123,13 @@ namespace DeepFace.Controllers
                 {
                     ExternalId = externalId,
                     DescriptorJson = JsonSerializer.Serialize(py.Embedding ?? Array.Empty<float>()),
-                    ThumbnailBase64 = py.Thumbnail
+                    ThumbnailBase64 = py.Thumbnail,
+                    Consent = true
                 };
                 _context.Faces.Add(entity);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "User enrolled successfully", faceId = entity.FaceId, externalId });
+                return Ok(new { message = "User enrolled successfully", faceId = entity.FaceId, externalId, consent = entity.Consent });
             }
             catch (Exception ex)
             {
