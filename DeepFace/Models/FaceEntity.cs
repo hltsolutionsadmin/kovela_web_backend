@@ -1,23 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DeepFace.Models
 {
     public class FaceEntity
-    {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int FaceId { get; set; }
+  {
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int FaceId { get; set; }
 
-        [Required]
-        public string ExternalId { get; set; } = default!; // GUID we pass to Python /enroll and store as image name
+    [Required, MaxLength(100)]
+    public string ExternalId { get; set; } = default!;
 
-        [Required]
-        public string DescriptorJson { get; set; } = default!; // embedding as JSON array of floats
+    [Required]
+    public string DescriptorJson { get; set; } = default!; // embedding as JSON array of floats
 
-        public string? ThumbnailBase64 { get; set; } // optional thumbnail (returned by Python)
+    public string? ThumbnailBase64 { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public bool Consent { get; set; }
-    }
+    public bool Consent { get; set; }
+  }
 }
