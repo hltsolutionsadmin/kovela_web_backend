@@ -1,4 +1,4 @@
-﻿using DeepFace.Models;
+using DeepFace.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,7 +48,7 @@ namespace DeepFace.Controllers
                 {
                     Base64Image = request.Base64Image,
                     TopK = 5,
-                    Threshold = 0.35,
+                    Threshold = 0.25,
                     IncludeThumbnails = true
                 };
 
