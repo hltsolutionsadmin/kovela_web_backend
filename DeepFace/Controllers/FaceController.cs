@@ -197,5 +197,11 @@ namespace DeepFace.Controllers
                 return StatusCode(500, new { error = $"Failed to clear data: {ex.Message}" });
             }
         }
+
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+      return Ok(new { message = "API is working good 🚀" });
     }
+  }
 }
