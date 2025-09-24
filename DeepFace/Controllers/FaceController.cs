@@ -77,12 +77,12 @@ namespace DeepFace.Controllers
                         .ToList();
 
                     var extIds = py.Matches.Select(m => m.ExternalId).Distinct().ToList();
-                    //var map = _context.Faces
-                    //    .Where(f => extIds.Contains(f.ExternalId))
-                    //    .ToDictionary(f => f.ExternalId, f => f.FaceId);
+                    var map = _context.Faces
+                       .Where(f => extIds.Contains(f.ExternalId))
+                       .ToDictionary(f => f.ExternalId, f => f.FaceId);
 
-                    //foreach (var m in py.Matches)
-                    //    if (map.TryGetValue(m.ExternalId, out var faceId)) m.FaceId = faceId;
+                    foreach (var m in py.Matches)
+                       if (map.TryGetValue(m.ExternalId, out var faceId)) m.FaceId = faceId;
                 }
 
                 return Ok(py);
