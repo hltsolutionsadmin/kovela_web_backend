@@ -13,7 +13,7 @@ namespace DeepFace.Controllers
         private readonly ApplicationDbContext _context;
         private static readonly HttpClient _http = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5001") // Flask server base URL
+            BaseAddress = new Uri("https://b1ac652b7bc4.ngrok-free.app/") // Flask server base URL
         };
 
         private static readonly JsonSerializerOptions JsonOpts = new JsonSerializerOptions
