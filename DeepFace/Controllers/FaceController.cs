@@ -13,7 +13,7 @@ namespace DeepFace.Controllers
         private readonly ApplicationDbContext _context;
         private static readonly HttpClient _http = new HttpClient
         {
-            BaseAddress = new Uri("http://127.0.0.1:5001/") // Flask server base URL
+            BaseAddress = new Uri("https://b1ac652b7bc4.ngrok-free.app/") // Flask server base URL
         };
 
         private static readonly JsonSerializerOptions JsonOpts = new JsonSerializerOptions
@@ -48,7 +48,7 @@ namespace DeepFace.Controllers
                 {
                     Base64Image = request.Base64Image,
                     TopK = 5,
-                    Threshold = 0.25,
+                    Threshold = 0.35,
                     IncludeThumbnails = true
                 };
 
@@ -77,12 +77,12 @@ namespace DeepFace.Controllers
                         .ToList();
 
                     var extIds = py.Matches.Select(m => m.ExternalId).Distinct().ToList();
-                    var map = _context.Faces
-                        .Where(f => extIds.Contains(f.ExternalId))
-                        .ToDictionary(f => f.ExternalId, f => f.FaceId);
+                    //var map = _context.Faces
+                    //    .Where(f => extIds.Contains(f.ExternalId))
+                    //    .ToDictionary(f => f.ExternalId, f => f.FaceId);
 
-                    foreach (var m in py.Matches)
-                        if (map.TryGetValue(m.ExternalId, out var faceId)) m.FaceId = faceId;
+                    //foreach (var m in py.Matches)
+                    //    if (map.TryGetValue(m.ExternalId, out var faceId)) m.FaceId = faceId;
                 }
 
                 return Ok(py);
