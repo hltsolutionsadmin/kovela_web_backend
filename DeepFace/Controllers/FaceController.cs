@@ -201,7 +201,7 @@ namespace DeepFace.Controllers
     [HttpGet("ping")]
     public IActionResult Ping()
     {
-      return Ok(new { message = "API is working good 🚀" });
+      return Ok(new { message = "API is working good good" });
     }
   }
 }
